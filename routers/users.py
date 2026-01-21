@@ -80,3 +80,15 @@ def get_current_user(token: str, db: Session = Depends(get_db)):
 def get_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     users = db.query(User).all()
     return users
+
+@router.delete("/{id}", dependencies=[Depends(get_current_user)])
+def delete_user(id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    user = db.query(User).filter(User.id == id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    
+    db.delete(user)
+    db.commit()
+
+    return "User deleted."
