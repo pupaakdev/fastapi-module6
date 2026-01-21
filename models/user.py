@@ -22,10 +22,12 @@ class UserResponse(BaseModel):
     username: str
     email: str
 
-class LoginRequest(BaseModel):
+class UserLoginRequest(BaseModel):
     username: str
     password: str
 
-class LoginResponse(BaseModel):
+class UserLoginResponse(BaseModel):
     message: str
     username: str
+    access_token: str
+    access_token_type: str = "bearer"

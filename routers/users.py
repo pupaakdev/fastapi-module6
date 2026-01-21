@@ -1,10 +1,10 @@
 import logging
 from fastapi import APIRouter, HTTPException
-from models.user import User, UserRequest, UserResponse, LoginRequest, LoginResponse
+from models.user import User, UserRequest, UserResponse, UserLoginRequest, UserLoginResponse
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from database import get_db
-from utils import hash_password, verify_password 
+from utils import hash_password, verify_password, create_access_token
 
 router = APIRouter()
 
@@ -39,8 +39,8 @@ def create_user(user_req: UserRequest, db: Session = Depends(get_db)):
 
     return response
 
-@router.post("/login", response_model=LoginResponse)
-def login_user(login_req: LoginRequest, db: Session = Depends(get_db)):
+@router.post("/login", response_model=UserLoginResponse)
+def login_user(login_req: UserLoginRequest, db: Session = Depends(get_db)):
     logging.info("Login endpoint called.")
     
     # Find user by username
@@ -53,5 +53,7 @@ def login_user(login_req: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid username or password.")
     
     logging.info(f"User {login_req.username} logged in successfully.")
+
+    access_token = create_access_token(data={"sub": user.username})
     
-    return LoginResponse(message="Login successful!", username=user.username)
+    return UserLoginResponse(message="Login successful!", username=user.username, access_token = access_token)
