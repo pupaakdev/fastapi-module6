@@ -4,7 +4,7 @@ from models.user import User, UserRequest, UserResponse, UserLoginRequest, UserL
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from database import get_db
-from utils import hash_password, verify_password, create_access_token
+from utils import hash_password, verify_password, create_access_token, decode_access_token
 
 router = APIRouter()
 
@@ -57,3 +57,26 @@ def login_user(login_req: UserLoginRequest, db: Session = Depends(get_db)):
     access_token = create_access_token(data={"sub": user.username})
     
     return UserLoginResponse(message="Login successful!", username=user.username, access_token = access_token)
+
+def get_current_user(token: str, db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = decode_access_token(token)
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except Exception:
+        raise credentials_exception
+    user = db.query(User).filter(User.username == username).first()
+    if user is None:
+        raise credentials_exception
+    return user
+
+@router.get("/", dependencies=[Depends(get_current_user)])
+def get_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    users = db.query(User).all()
+    return users
