@@ -6,7 +6,7 @@ from pydantic import BaseModel
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     username = Column(String, primary_key=True, index=True)
     fullname = Column(String)
     email = Column(String, index=True)
