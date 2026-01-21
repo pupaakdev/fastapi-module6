@@ -21,3 +21,11 @@ class UserRequest(BaseModel):
 class UserResponse(BaseModel):
     username: str
     email: str
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class LoginResponse(BaseModel):
+    message: str
+    username: str

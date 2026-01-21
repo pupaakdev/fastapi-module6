@@ -1,16 +1,16 @@
 import logging
 from fastapi import APIRouter, HTTPException
-from models.user import User, UserRequest, UserResponse
+from models.user import User, UserRequest, UserResponse, LoginRequest, LoginResponse
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from database import get_db
-from utils import hash_password 
+from utils import hash_password, verify_password 
 
 router = APIRouter()
 
 @router.post("/register", response_model=UserResponse)
 def create_user(user_req: UserRequest, db: Session = Depends(get_db)):
-    logging.info("Endpoint called.")
+    logging.info("Register endpoint called.")
 
     # Check if username exists
     existing_user = db.query(User).filter(User.username == user_req.username).first()
@@ -38,3 +38,20 @@ def create_user(user_req: UserRequest, db: Session = Depends(get_db)):
     response = UserResponse(username = new_user.username, email = new_user.email)
 
     return response
+
+@router.post("/login", response_model=LoginResponse)
+def login_user(login_req: LoginRequest, db: Session = Depends(get_db)):
+    logging.info("Login endpoint called.")
+    
+    # Find user by username
+    user = db.query(User).filter(User.username == login_req.username).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
+    
+    # Verify password
+    if not verify_password(login_req.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
+    
+    logging.info(f"User {login_req.username} logged in successfully.")
+    
+    return LoginResponse(message="Login successful!", username=user.username)
