@@ -12,6 +12,13 @@ class User(Base):
     email = Column(String, index=True)
     hashed_password = Column(String)
 
+    github_id = Column(String, unique=True, index=True, nullable=True)
+    avatar_url = Column(String, nullable=True)
+    auth_provider = Column(String, default="local")
+
+    def __repr__(self):
+        return f"<User(username={self.username}, email={self.email}, auth_provider={self.auth_provider})>"
+
 class UserRequest(BaseModel):
     username: str
     fullname: str

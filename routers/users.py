@@ -1,12 +1,15 @@
 import logging
 from fastapi import APIRouter, HTTPException
 from models.user import User, UserRequest, UserResponse, UserLoginRequest, UserLoginResponse
-from fastapi import Depends
+from fastapi import Depends, Security
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from database import get_db
 from utils import hash_password, verify_password, create_access_token, decode_access_token
 
 router = APIRouter()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 @router.post("/register", response_model=UserResponse)
 def create_user(user_req: UserRequest, db: Session = Depends(get_db)):
@@ -58,15 +61,20 @@ def login_user(login_req: UserLoginRequest, db: Session = Depends(get_db)):
     
     return UserLoginResponse(message="Login successful!", username=user.username, access_token = access_token)
 
-def get_current_user(token: str, db: Session = Depends(get_db)):
+def get_current_user(token: str = Security(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    logging.info(f"Token received: {token}")
     try:
+        logging.info("Decoding access token")
         payload = decode_access_token(token)
+        logging.info(f"Payload decoded: {payload}")
         username: str = payload.get("sub")
+
+        logging.info(f"Decoded username: {username}")
         if username is None:
             raise credentials_exception
     except Exception:
