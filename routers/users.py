@@ -23,7 +23,7 @@ def create_user(user_req: UserRequest, db: Session = Depends(get_db)):
     # Check if email is already registered
     existing_email = db.query(User).filter(User.email == user_req.email).first()
     if existing_email:
-        raise HTTPException(status_code = 409, detail = f"Email {user_req.email} is already registered.")
+        raise HTTPException(status_code = 409, detail = f"Account with {user_req.email} already exists.")
     
     # Create new user
     new_user = User(
